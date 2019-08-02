@@ -1,9 +1,13 @@
-const templateString = `
+const templateString = ({ placeholder }) => `
   <style>
-    body {
-      margin: 100px;
-      padding: 10%;
-      background-color: white;
+    :host {
+      display: block;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     input {
@@ -11,26 +15,26 @@ const templateString = `
       padding: 10px;
       font-size: 14px;
       box-shadow: 1px 2px 2px 1px;
+      width: calc(100% - 20px);
+      margin: 10px;
+      margin-bottom: 0px;
     }
 
     div {
-      margin-top: 20px;
-      margin-bottom: 20px;
+      background-color: #f2f2f2;
+      margin: 10px;
+      margin-top: 0px;
     }
 
     .result {
-      border: 1px solid gray;
-      height: 1em;
-      margin-top: 0px;
-      margin-bottom: 10px;
+      margin: 0;
       padding: 10px;
       overflow: hidden;
-      box-shadow: 1px 2px 2px 1px;
-      font-weight: 400;
+      border-bottom: 1px solid lightgray;
     }
   </style>
   <body>
-    <input id="input" onkeyup="handleKeyUp(event);" placeholder="you complete me..." />
+    <input id="input" onkeyup="handleKeyUp(event);" placeholder="${placeholder}" />
     <div id="suggestions"></div>
   </body>
 `;
@@ -41,18 +45,38 @@ template.innerHTML = templateString;
 export class Autosuggest extends HTMLElement {
   constructor() {
     super();
-    const shadowRoot = this.attachShadow({ mode: "open" });
-    shadowRoot.appendChild(template.content.cloneNode(true));
-    this._overlay = shadowRoot.querySelector(".overlay");
-    this._content = shadowRoot.querySelector(".overlay-content");
+
+    // use shadow DOM to hide our shame
+    // best practice to do this in the constructor
+    this._shadowRoot = this.attachShadow({ mode: "open" });
   }
 
-  static setStyle(element, style, value, pxStyles) {
-    if (value) {
-      if (pxStyles && pxStyles.indexOf(style) > -1) {
-        value += "px";
-      }
-      element.style[style] = value;
+  // life cycle method for when the element is inserted into the DOM
+  connectedCallback() {
+    // as a best practice, don't override attributes that a user may have set
+    if (!this.hasAttribute("tabindex")) {
+      this.setAttribute("tabindex", 0);
+    }
+
+    // configurable options passed in through properties
+    const options = this.options || { placeholder: "Type here..." };
+
+    // build template dynamically with options
+    const template = document.createElement("template");
+    template.innerHTML = templateString(options);
+
+    // html template is rendered when cloned, let's attach it to the shadow DOM
+    // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template
+    this._shadowRoot.appendChild(template.content.cloneNode(true));
+  }
+
+  // helper to lazily set properties (i.e. if properties get set before loaded
+  // we can ensure that the state is properly reflected)
+  _upgradeProperty(prop) {
+    if (this.hasOwnProperty(prop)) {
+      let value = this[prop];
+      delete this[prop];
+      this[prop] = value;
     }
   }
 }
