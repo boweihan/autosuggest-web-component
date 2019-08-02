@@ -99,12 +99,13 @@ export class Autosuggest extends HTMLElement {
     // the path
     let substring = event.path[0].value;
 
-    if (!substring) {
-      return;
-    }
-
     let suggestionBox = this._shadowRoot.querySelector("#suggestions");
     suggestionBox.innerHTML = "";
+
+    if (!substring) {
+      return [];
+    }
+
     let results = this._trie.find(substring);
 
     let appendResult = result => {
