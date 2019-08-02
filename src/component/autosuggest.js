@@ -1,3 +1,6 @@
+import { Trie } from "./trie";
+import { debounce } from "./debounce";
+
 const templateString = ({ placeholder }) => `
   <style>
     :host {
@@ -34,7 +37,7 @@ const templateString = ({ placeholder }) => `
     }
   </style>
   <body>
-    <input id="input" onkeyup="handleKeyUp(event);" placeholder="${placeholder}" />
+    <input id="input" placeholder="${placeholder}" />
     <div id="suggestions"></div>
   </body>
 `;
@@ -43,6 +46,7 @@ const template = document.createElement("template");
 template.innerHTML = templateString;
 
 export class Autosuggest extends HTMLElement {
+  // constructors for custom elements cannot access properties or attributes
   constructor() {
     super();
 
@@ -53,6 +57,10 @@ export class Autosuggest extends HTMLElement {
 
   // life cycle method for when the element is inserted into the DOM
   connectedCallback() {
+    // set up data structure to handle suggestions
+    const words = this.words || [];
+    this._trie = new Trie(words);
+
     // as a best practice, don't override attributes that a user may have set
     if (!this.hasAttribute("tabindex")) {
       this.setAttribute("tabindex", 0);
@@ -68,6 +76,11 @@ export class Autosuggest extends HTMLElement {
     // html template is rendered when cloned, let's attach it to the shadow DOM
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template
     this._shadowRoot.appendChild(template.content.cloneNode(true));
+
+    // bind event handlers
+    this._shadowRoot
+      .querySelector("#input")
+      .addEventListener("keyup", debounce(this.keyUp.bind(this), 0));
   }
 
   // helper to lazily set properties (i.e. if properties get set before loaded
@@ -77,6 +90,33 @@ export class Autosuggest extends HTMLElement {
       let value = this[prop];
       delete this[prop];
       this[prop] = value;
+    }
+  }
+
+  keyUp(event) {
+    // event.target.value is subject to re-targeting for shadow DOM elements
+    // which helps with encapsulation. We need to get the correct target from
+    // the path
+    let substring = event.path[0].value;
+
+    if (!substring) {
+      return;
+    }
+
+    let suggestionBox = this._shadowRoot.querySelector("#suggestions");
+    suggestionBox.innerHTML = "";
+    let results = this._trie.find(substring);
+
+    let appendResult = result => {
+      let div = document.createElement("div");
+      div.className += " result";
+      let text = document.createTextNode(result);
+      div.append(text);
+      suggestionBox.append(div);
+    };
+
+    for (let i = 0; i < results.length; i++) {
+      appendResult(results[i]);
     }
   }
 }
