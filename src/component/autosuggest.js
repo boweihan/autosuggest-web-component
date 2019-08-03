@@ -54,10 +54,10 @@ export class Autosuggest extends HTMLElement {
     const options = {
       placeholder: "Type here...",
       inputCss: `{
-        border: 2px solid black;
+        border: 1px solid black;
         padding: 10px;
         font-size: 14px;
-        box-shadow: 1px 2px 2px 1px;
+        box-shadow: 1px 1px 1px 1px;
         width: calc(100% - 20px);
         margin: 10px;
         margin-bottom: 0px;
@@ -121,6 +121,7 @@ export class Autosuggest extends HTMLElement {
 
     let appendResult = result => {
       let div = document.createElement("div");
+      div.tabIndex = 0;
       div.className += " result";
       let text = document.createTextNode(result);
       div.append(text);
