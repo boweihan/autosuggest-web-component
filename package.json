@@ -1,8 +1,8 @@
 {
   "name": "autosuggest-web-component",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "Autosuggestion Web Component",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "readme": "doctoc ./README.md",
     "precommit": "npm run readme",
