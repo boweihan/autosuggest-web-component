@@ -16,10 +16,6 @@
 
 ## Installation
 
-`npm install autosuggest-web-component`
+`npm install -- save autosuggest-web-component`
 
 ## Usage
-
-You can require the whole library:
-
-`import * from autosuggest-web-component;`
