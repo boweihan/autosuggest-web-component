@@ -21,7 +21,7 @@ const templateString = ({
     .result ${resultCss}
   </style>
   <div>
-    <input id="input" placeholder="${placeholder}" />
+    <input id="input" name="autosuggest" aria-label="Autosuggest" placeholder="${placeholder}" />
     <div id="suggestion"></div>
   </div>
 `;
@@ -121,7 +121,6 @@ export class Autosuggest extends HTMLElement {
 
     let appendResult = result => {
       let div = document.createElement("div");
-      div.tabIndex = 0;
       div.className += " result";
       let text = document.createTextNode(result);
       div.append(text);
