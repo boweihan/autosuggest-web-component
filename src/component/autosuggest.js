@@ -1,45 +1,29 @@
 import { Trie } from "./trie";
 import { debounce } from "./debounce";
 
-const templateString = ({ placeholder }) => `
+const templateString = ({
+  placeholder,
+  inputCss,
+  suggestionCss,
+  resultCss,
+}) => `
   <style>
     :host {
       display: block;
     }
-
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-
-    input {
-      border: 2px solid black;
-      padding: 10px;
-      font-size: 14px;
-      box-shadow: 1px 2px 2px 1px;
-      width: calc(100% - 20px);
-      margin: 10px;
-      margin-bottom: 0px;
-    }
-
-    div {
-      background-color: #f2f2f2;
-      margin: 10px;
-      margin-top: 0px;
-    }
-
-    .result {
-      margin: 0;
-      padding: 10px;
-      overflow: hidden;
-      border-bottom: 1px solid lightgray;
-    }
+    #input ${inputCss}
+    #suggestion ${suggestionCss}
+    .result ${resultCss}
   </style>
-  <body>
+  <div>
     <input id="input" placeholder="${placeholder}" />
-    <div id="suggestions"></div>
-  </body>
+    <div id="suggestion"></div>
+  </div>
 `;
 
 const template = document.createElement("template");
@@ -67,7 +51,31 @@ export class Autosuggest extends HTMLElement {
     }
 
     // configurable options passed in through properties
-    const options = this.options || { placeholder: "Type here..." };
+    const options = {
+      placeholder: "Type here...",
+      inputCss: `{
+        border: 2px solid black;
+        padding: 10px;
+        font-size: 14px;
+        box-shadow: 1px 2px 2px 1px;
+        width: calc(100% - 20px);
+        margin: 10px;
+        margin-bottom: 0px;
+      }`,
+      suggestionCss: `{
+        background-color: #f2f2f2;
+        margin: 10px;
+        margin-top: 0px;
+      }`,
+      resultCss: `{
+        margin: 0;
+        padding: 10px;
+        overflow: hidden;
+        border-bottom: 1px solid lightgray;
+      }`,
+      debounce: 0,
+      ...(this.options || {}),
+    };
 
     // build template dynamically with options
     const template = document.createElement("template");
@@ -80,7 +88,10 @@ export class Autosuggest extends HTMLElement {
     // bind event handlers
     this._shadowRoot
       .querySelector("#input")
-      .addEventListener("keyup", debounce(this.keyUp.bind(this), 0));
+      .addEventListener(
+        "keyup",
+        debounce(this.keyUp.bind(this), options.debounce),
+      );
   }
 
   // helper to lazily set properties (i.e. if properties get set before loaded
@@ -99,7 +110,7 @@ export class Autosuggest extends HTMLElement {
     // the path
     let substring = event.path[0].value;
 
-    let suggestionBox = this._shadowRoot.querySelector("#suggestions");
+    let suggestionBox = this._shadowRoot.querySelector("#suggestion");
     suggestionBox.innerHTML = "";
 
     if (!substring) {
